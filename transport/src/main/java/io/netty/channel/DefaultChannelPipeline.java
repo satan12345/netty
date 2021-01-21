@@ -93,7 +93,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
         succeededFuture = new SucceededChannelFuture(channel, null);
         voidPromise =  new VoidChannelPromise(channel, true);
-
+        //初始化两个handler 作为头尾的handler
         tail = new TailContext(this);
         head = new HeadContext(this);
 
@@ -200,7 +200,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
             checkMultiplicity(handler);
-
+            //封装handler
             newCtx = newContext(group, filterName(name, handler), handler);
 
             addLast0(newCtx);

@@ -146,17 +146,16 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return this;
     }
 
+    /**
+     * 调用注册的channelHandler
+     * @param next
+     */
     static void invokeChannelRegistered(final AbstractChannelHandlerContext next) {
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
             next.invokeChannelRegistered();
         } else {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    next.invokeChannelRegistered();
-                }
-            });
+            executor.execute(() -> next.invokeChannelRegistered());
         }
     }
 
@@ -876,6 +875,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private AbstractChannelHandlerContext findContextInbound(int mask) {
         AbstractChannelHandlerContext ctx = this;
         EventExecutor currentExecutor = executor();
+        //循环
         do {
             ctx = ctx.next;
         } while (skipContext(ctx, currentExecutor, mask, MASK_ONLY_INBOUND));

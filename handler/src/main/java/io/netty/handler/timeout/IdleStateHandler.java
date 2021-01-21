@@ -135,15 +135,15 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     /**
      * Creates a new instance firing {@link IdleStateEvent}s.
      *
-     * @param readerIdleTimeSeconds
+     * @param readerIdleTimeSeconds 读超时时间
      *        an {@link IdleStateEvent} whose state is {@link IdleState#READER_IDLE}
      *        will be triggered when no read was performed for the specified
      *        period of time.  Specify {@code 0} to disable.
-     * @param writerIdleTimeSeconds
+     * @param writerIdleTimeSeconds 写超时时间
      *        an {@link IdleStateEvent} whose state is {@link IdleState#WRITER_IDLE}
      *        will be triggered when no write was performed for the specified
      *        period of time.  Specify {@code 0} to disable.
-     * @param allIdleTimeSeconds
+     * @param allIdleTimeSeconds 总的超时时间
      *        an {@link IdleStateEvent} whose state is {@link IdleState#ALL_IDLE}
      *        will be triggered when neither read nor write was performed for
      *        the specified period of time.  Specify {@code 0} to disable.
@@ -318,7 +318,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         initOutputChanged(ctx);
 
         lastReadTime = lastWriteTime = ticksInNanos();
+        //读超时时间
         if (readerIdleTimeNanos > 0) {
+            //创建定时任务 指定时间之后执行
             readerIdleTimeout = schedule(ctx, new ReaderIdleTimeoutTask(ctx),
                     readerIdleTimeNanos, TimeUnit.NANOSECONDS);
         }
@@ -487,11 +489,14 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
         @Override
         protected void run(ChannelHandlerContext ctx) {
+            //延迟
             long nextDelay = readerIdleTimeNanos;
             if (!reading) {
+                //nextDelay= nextDelay-(当前时间-上一次执行时间)
+                //判断   ·上一次读的时间到现在的时间 是否大于指定的延迟时间
                 nextDelay -= ticksInNanos() - lastReadTime;
             }
-
+            //超时了
             if (nextDelay <= 0) {
                 // Reader is idle - set a new timeout and notify the callback.
                 readerIdleTimeout = schedule(ctx, this, readerIdleTimeNanos, TimeUnit.NANOSECONDS);
@@ -501,11 +506,13 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
                 try {
                     IdleStateEvent event = newIdleStateEvent(IdleState.READER_IDLE, first);
+                    //调用下一个ChannelHandler的 fireUserEventTriggered方法
                     channelIdle(ctx, event);
                 } catch (Throwable t) {
                     ctx.fireExceptionCaught(t);
                 }
             } else {
+                //读没有超时
                 // Read occurred before the timeout - set a new timeout with shorter delay.
                 readerIdleTimeout = schedule(ctx, this, nextDelay, TimeUnit.NANOSECONDS);
             }

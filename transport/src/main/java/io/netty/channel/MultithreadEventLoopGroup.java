@@ -33,10 +33,15 @@ import java.util.concurrent.ThreadFactory;
 public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutorGroup implements EventLoopGroup {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(MultithreadEventLoopGroup.class);
-
+    /**
+     * //默认的线程数
+     */
     private static final int DEFAULT_EVENT_LOOP_THREADS;
 
     static {
+        /**
+         *获取配置的线程池数或者 当前处理器核数的2倍
+         */
         DEFAULT_EVENT_LOOP_THREADS = Math.max(1, SystemPropertyUtil.getInt(
                 "io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 2));
 
@@ -65,6 +70,9 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
      */
     protected MultithreadEventLoopGroup(int nThreads, Executor executor, EventExecutorChooserFactory chooserFactory,
                                      Object... args) {
+        /**
+         * 没有指定线程数 则使用默认的线程数
+         */
         super(nThreads == 0 ? DEFAULT_EVENT_LOOP_THREADS : nThreads, executor, chooserFactory, args);
     }
 
@@ -83,6 +91,7 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
 
     @Override
     public ChannelFuture register(Channel channel) {
+
         return next().register(channel);
     }
 

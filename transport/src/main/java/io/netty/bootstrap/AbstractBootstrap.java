@@ -55,14 +55,22 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     static final Map.Entry<ChannelOption<?>, Object>[] EMPTY_OPTION_ARRAY = new Map.Entry[0];
     @SuppressWarnings("unchecked")
     static final Map.Entry<AttributeKey<?>, Object>[] EMPTY_ATTRIBUTE_ARRAY = new Map.Entry[0];
-
+    /**
+     * bossGroup
+     */
     volatile EventLoopGroup group;
+    /**
+     * channel工厂
+     */
     @SuppressWarnings("deprecation")
     private volatile ChannelFactory<? extends C> channelFactory;
     private volatile SocketAddress localAddress;
 
     // The order in which ChannelOptions are applied is important they may depend on each other for validation
     // purposes.
+    /**
+     * 属性的map
+     */
     private final Map<ChannelOption<?>, Object> options = new LinkedHashMap<ChannelOption<?>, Object>();
     private final Map<AttributeKey<?>, Object> attrs = new ConcurrentHashMap<AttributeKey<?>, Object>();
     private volatile ChannelHandler handler;
@@ -106,6 +114,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * {@link Channel} implementation has no no-args constructor.
      */
     public B channel(Class<? extends C> channelClass) {
+        //返回创建channel的工厂
         return channelFactory(new ReflectiveChannelFactory<C>(
                 ObjectUtil.checkNotNull(channelClass, "channelClass")
         ));
@@ -120,7 +129,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (this.channelFactory != null) {
             throw new IllegalStateException("channelFactory set already");
         }
-
+        //设置channelFacotry
         this.channelFactory = channelFactory;
         return self();
     }
@@ -173,6 +182,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     public <T> B option(ChannelOption<T> option, T value) {
         ObjectUtil.checkNotNull(option, "option");
         synchronized (options) {
+
             if (value == null) {
                 options.remove(option);
             } else {
@@ -269,7 +279,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        //初始化 注册
         final ChannelFuture regFuture = initAndRegister();
+
         final Channel channel = regFuture.channel();
         if (regFuture.cause() != null) {
             return regFuture;
@@ -278,6 +290,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
             ChannelPromise promise = channel.newPromise();
+            //
             doBind0(regFuture, channel, localAddress, promise);
             return promise;
         } else {
@@ -307,7 +320,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
+            //利用channelFactory创建channel
             channel = channelFactory.newChannel();
+            //初始化
             init(channel);
         } catch (Throwable t) {
             if (channel != null) {
@@ -319,7 +334,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             // as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
-
+        //注册 bossGroup
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {

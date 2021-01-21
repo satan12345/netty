@@ -31,6 +31,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
 
     private final EventExecutor[] children;
+    /**
+     * 只读的NIOEventLoop
+     */
     private final Set<EventExecutor> readonlyChildren;
     private final AtomicInteger terminatedChildren = new AtomicInteger();
     private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
@@ -68,19 +71,22 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      */
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor,
                                             EventExecutorChooserFactory chooserFactory, Object... args) {
+
         if (nThreads <= 0) {
             throw new IllegalArgumentException(String.format("nThreads: %d (expected: > 0)", nThreads));
         }
 
         if (executor == null) {
+            //创建线程任务执行器
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
-
+        //创建一个线程池组 NioEventLoop
         children = new EventExecutor[nThreads];
 
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
+                //创建NioEventLoop对象 args[0]
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
@@ -107,7 +113,8 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 }
             }
         }
-
+        //DefaultEventExecutorChooserFactory
+        //任务分配的执行器
         chooser = chooserFactory.newChooser(children);
 
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
@@ -118,7 +125,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 }
             }
         };
-
+        //增加结束监听
         for (EventExecutor e: children) {
             e.terminationFuture().addListener(terminationListener);
         }

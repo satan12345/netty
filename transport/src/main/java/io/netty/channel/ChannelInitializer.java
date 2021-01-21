@@ -59,7 +59,7 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
     private final Set<ChannelHandlerContext> initMap = Collections.newSetFromMap(
             new ConcurrentHashMap<ChannelHandlerContext, Boolean>());
 
-    /**
+    /**当channel注册的时候该方法会被调用
      * This method will be called once the {@link Channel} was registered. After the method returns this instance
      * will be removed from the {@link ChannelPipeline} of the {@link Channel}.
      *

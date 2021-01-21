@@ -77,10 +77,12 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel}
      */
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
+        //保存感兴趣的事件
         super(parent);
         this.ch = ch;
         this.readInterestOp = readInterestOp;
         try {
+            //设置channel为非阻塞
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {
@@ -377,6 +379,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         boolean selected = false;
         for (;;) {
             try {
+                //serverSocketChannel注册到selector上
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {
