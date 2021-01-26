@@ -44,12 +44,13 @@ import java.util.Map;
  * NIO selector based implementation to accept new connections.
  */
 public class NioServerSocketChannel extends AbstractNioMessageChannel
-                             implements io.netty.channel.socket.ServerSocketChannel {
+        implements io.netty.channel.socket.ServerSocketChannel {
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioServerSocketChannel.class);
+
     /**
      * 创建ServerSocketChannel
      */
@@ -61,7 +62,9 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
              *
              *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
              */
-            return provider.openServerSocketChannel();
+            //创建ServerSocketChannel
+            ServerSocketChannel serverSocketChannel = provider.openServerSocketChannel();
+            return serverSocketChannel;
         } catch (IOException e) {
             throw new ChannelException(
                     "Failed to open a server socket.", e);
@@ -90,6 +93,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     public NioServerSocketChannel(ServerSocketChannel channel) {
         //保存感兴趣的事件
         super(null, channel, SelectionKey.OP_ACCEPT);
+        //serverSocketChannel的配置类
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
     }
 

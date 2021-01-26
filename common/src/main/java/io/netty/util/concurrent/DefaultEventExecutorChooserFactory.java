@@ -45,6 +45,9 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
     private static final class PowerOfTwoEventExecutorChooser implements EventExecutorChooser {
         private final AtomicInteger idx = new AtomicInteger();
+        /**
+         * eventLoopGroup
+         */
         private final EventExecutor[] executors;
 
         PowerOfTwoEventExecutorChooser(EventExecutor[] executors) {

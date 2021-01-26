@@ -72,12 +72,13 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private static final AtomicReferenceFieldUpdater<SingleThreadEventExecutor, ThreadProperties> PROPERTIES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
-
+    //任务队列
     private final Queue<Runnable> taskQueue;
 
     private volatile Thread thread;
     @SuppressWarnings("unused")
     private volatile ThreadProperties threadProperties;
+    //线程执行器
     private final Executor executor;
     private volatile boolean interrupted;
 
@@ -828,7 +829,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private void execute(Runnable task, boolean immediate) {
         //判断当前运行的线程与eventLoop是否是同一个线程
         boolean inEventLoop = inEventLoop();
-        //任务添加到taskQueue
+        //任务register0(promise); 添加到taskQueue
         addTask(task);
         if (!inEventLoop) {
             startThread();

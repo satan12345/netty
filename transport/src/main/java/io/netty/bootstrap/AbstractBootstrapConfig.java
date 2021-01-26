@@ -30,7 +30,7 @@ import java.util.Map;
  * Exposes the configuration of an {@link AbstractBootstrap}.
  */
 public abstract class AbstractBootstrapConfig<B extends AbstractBootstrap<B, C>, C extends Channel> {
-
+    // bootstrap
     protected final B bootstrap;
 
     protected AbstractBootstrapConfig(B bootstrap) {

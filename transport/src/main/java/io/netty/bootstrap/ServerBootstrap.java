@@ -126,13 +126,14 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Set the {@link ChannelHandler} which is used to serve the request for the {@link Channel}'s.
      */
     public ServerBootstrap childHandler(ChannelHandler childHandler) {
-        //设置子处理器
+        //赋值子处理器
         this.childHandler = ObjectUtil.checkNotNull(childHandler, "childHandler");
         return this;
     }
 
     /**
      * 初始化
+     * 此处入参channel为 NioServerSocketChannel 实例
      * @param channel
      */
     @Override
@@ -141,15 +142,21 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         setAttributes(channel, attrs0().entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY));
         //获得 pipleline(DefaultChannelPipeline )
         ChannelPipeline p = channel.pipeline();
-
+        //workerGroup赋值
         final EventLoopGroup currentChildGroup = childGroup;
+        /**
+         * 子处理器赋值
+         *
+         */
         final ChannelHandler currentChildHandler = childHandler;
         final Entry<ChannelOption<?>, Object>[] currentChildOptions;
         synchronized (childOptions) {
             currentChildOptions = childOptions.entrySet().toArray(EMPTY_OPTION_ARRAY);
         }
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = childAttrs.entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY);
-        //添加一个 handler
+        /**
+         * NioServerSocketChannel的pipeline增加一个处理器
+         */
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) {

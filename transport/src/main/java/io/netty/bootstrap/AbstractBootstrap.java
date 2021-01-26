@@ -61,9 +61,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     volatile EventLoopGroup group;
     /**
      * channel工厂
+     * ReflectiveChannelFactory
      */
     @SuppressWarnings("deprecation")
     private volatile ChannelFactory<? extends C> channelFactory;
+
     private volatile SocketAddress localAddress;
 
     // The order in which ChannelOptions are applied is important they may depend on each other for validation
@@ -71,7 +73,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     /**
      * 属性的map
      */
-    private final Map<ChannelOption<?>, Object> options = new LinkedHashMap<ChannelOption<?>, Object>();
+    private final Map<ChannelOption<?>, Object> options = new LinkedHashMap<>();
     private final Map<AttributeKey<?>, Object> attrs = new ConcurrentHashMap<AttributeKey<?>, Object>();
     private volatile ChannelHandler handler;
 
@@ -320,10 +322,17 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
-            //利用channelFactory创建channel
+            /**
+             * 利用channelFactory创建channel
+             * channelFactory为：ReflectiveChannelFactory
+             * ReflectiveChannelFactory 在构造的时候传递NioServerSocketChannel.class
+             * 此处newChannel 则会实例化 NioServerSocketChannel 对象
+             *返回的channel为 NioServerSocketChannel 实例
+             */
             channel = channelFactory.newChannel();
             //初始化
             init(channel);
+
         } catch (Throwable t) {
             if (channel != null) {
                 // channel can be null if newChannel crashed (eg SocketException("too many open files"))
@@ -335,6 +344,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
         //注册 bossGroup
+        /**
+         * config().group()
+         * 获得bootstrap的配置类，group（）则是在获得配置类中的bootstrap的group
+         * 此处为boosGroup 即NioEventLoopGroup
+         */
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
