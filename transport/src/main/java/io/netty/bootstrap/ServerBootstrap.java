@@ -146,7 +146,6 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         final EventLoopGroup currentChildGroup = childGroup;
         /**
          * 子处理器赋值
-         *
          */
         final ChannelHandler currentChildHandler = childHandler;
         final Entry<ChannelOption<?>, Object>[] currentChildOptions;
@@ -233,13 +232,10 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             try {
                 //childGroup  -->workerGroup
                 //child -->socketChannel
-                //socketchannel注册
-                childGroup.register(child).addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        if (!future.isSuccess()) {
-                            forceClose(child, future.cause());
-                        }
+                //socketchannel注册到workerGroup
+                childGroup.register(child).addListener((ChannelFutureListener) future -> {
+                    if (!future.isSuccess()) {
+                        forceClose(child, future.cause());
                     }
                 });
             } catch (Throwable t) {

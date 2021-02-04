@@ -112,6 +112,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
      * The NIO {@link Selector}.
      */
     private Selector selector;
+    /**
+     * 未包装selector
+     */
     private Selector unwrappedSelector;
     private SelectedSelectionKeySet selectedKeys;
 
@@ -137,8 +140,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                  EventLoopTaskQueueFactory queueFactory) {
         super(parent, executor, false, newTaskQueue(queueFactory), newTaskQueue(queueFactory),
                 rejectedExecutionHandler);
+
         this.provider = ObjectUtil.checkNotNull(selectorProvider, "selectorProvider");
         this.selectStrategy = ObjectUtil.checkNotNull(strategy, "selectStrategy");
+        //创建selector
         final SelectorTuple selectorTuple = openSelector();
         //设置selector
         this.selector = selectorTuple.selector;
@@ -171,6 +176,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private SelectorTuple openSelector() {
         final Selector unwrappedSelector;
         try {
+            //创建selector
             unwrappedSelector = provider.openSelector();
         } catch (IOException e) {
             throw new ChannelException("failed to open a new selector", e);
@@ -455,7 +461,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         nextWakeupNanos.set(curDeadlineNanos);
                         try {
                             if (!hasTasks()) {
-                                //
+                                //获取准备就绪的事件
                                 strategy = select(curDeadlineNanos);
                             }
                         } finally {
@@ -483,7 +489,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 if (ioRatio == 100) {
                     try {
                         if (strategy > 0) {
-                            //处理selectedKeys
+                            // 当存在准备就绪的事件 处理selectedKeys
                             processSelectedKeys();
                         }
                     } finally {
@@ -493,10 +499,12 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 } else if (strategy > 0) {
                     final long ioStartTime = System.nanoTime();
                     try {
+                        // 当存在准备就绪的事件 处理selectedKeys
                         processSelectedKeys();
                     } finally {
                         // Ensure we always run tasks.
                         final long ioTime = System.nanoTime() - ioStartTime;
+                        //执行所有的任务
                         ranTasks = runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
                     }
                 } else {
@@ -579,6 +587,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    /**
+     * 处理连接的事件
+     */
     private void processSelectedKeys() {
         if (selectedKeys != null) {
             processSelectedKeysOptimized();
@@ -723,7 +734,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
-            //连击操作
+            //连接与数据读取操作
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
                 unsafe.read();
             }

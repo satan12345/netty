@@ -47,6 +47,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     private final Channel parent;
     private final ChannelId id;
     private final Unsafe unsafe;
+    //channel的 pipeline
     private final DefaultChannelPipeline pipeline;
     private final VoidChannelPromise unsafeVoidPromise = new VoidChannelPromise(this, false);
     private final CloseFuture closeFuture = new CloseFuture(this);
@@ -70,7 +71,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      */
     protected AbstractChannel(Channel parent) {
         this.parent = parent;
+        //设置channelId
         id = newId();
+        //额
         unsafe = newUnsafe();
         //为channel 创建pipeline链表
         pipeline = newChannelPipeline();
@@ -462,9 +465,12 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
                 return;
             }
-
+            //赋值eventLoop
             AbstractChannel.this.eventLoop = eventLoop;
-
+            /**
+             * 判断当前程序运行的线程与该eventLoop中的线程是否为同一个线程
+             * envetLoop :NioEventLoop
+             */
             if (eventLoop.inEventLoop()) {
                 register0(promise);
             } else {
@@ -494,6 +500,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
+                //channel注册到selector上
                 doRegister();
                 neverRegistered = false;
                 registered = true;
@@ -503,7 +510,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 pipeline.invokeHandlerAddedIfNeeded();
 
                 safeSetSuccess(promise);
-                //逐个调用
+                //调用pipeline
                 pipeline.fireChannelRegistered();
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.

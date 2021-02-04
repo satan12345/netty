@@ -57,6 +57,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * 感兴趣的事件
      */
     protected final int readInterestOp;
+    /**
+     * channel注册到selector上返回的selectionKey
+     */
     volatile SelectionKey selectionKey;
     boolean readPending;
     private final Runnable clearReadPendingRunnable = new Runnable() {
@@ -84,8 +87,10 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
         //保存感兴趣的事件
         super(parent);
-        this.ch = ch;//serverSocketChannel
-        this.readInterestOp = readInterestOp;//感兴趣的事件
+        //赋值channel
+        this.ch = ch;
+        //赋值感兴趣的事件
+        this.readInterestOp = readInterestOp;
         try {
             //设置channel为非阻塞
             ch.configureBlocking(false);
@@ -384,7 +389,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         boolean selected = false;
         for (;;) {
             try {
-                //serverSocketChannel注册到selector上
+                //channel注册到selector上
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {

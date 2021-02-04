@@ -426,6 +426,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             return false;
         }
         for (; ; ) {
+            //执行task任务
             safeExecute(task);
             task = pollTaskFrom(taskQueue);
             if (task == null) {
@@ -461,6 +462,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      */
     protected boolean runAllTasks(long timeoutNanos) {
         fetchFromScheduledTaskQueue();
+        //拿任务
         Runnable task = pollTask();
         if (task == null) {
             afterRunningAllTasks();
@@ -471,6 +473,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         long runTasks = 0;
         long lastExecutionTime;
         for (; ; ) {
+            //执行任务
             safeExecute(task);
 
             runTasks++;
@@ -832,6 +835,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         //任务register0(promise); 添加到taskQueue
         addTask(task);
         if (!inEventLoop) {
+            //启动线程
             startThread();
             if (isShutdown()) {
                 boolean reject = false;
@@ -947,9 +951,11 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private void startThread() {
         if (state == ST_NOT_STARTED) {
+            //CAS原子修改state状态
             if (STATE_UPDATER.compareAndSet(this, ST_NOT_STARTED, ST_STARTED)) {
                 boolean success = false;
                 try {
+                    //启动线程 此处控制线程池只会创建一个线程
                     doStartThread();
                     success = true;
                 } finally {
@@ -981,6 +987,10 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private void doStartThread() {
         assert thread == null;
+        /**
+         * executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
+         * 此处的executor 是创建NioEventLoopGroup时创建的线程池
+         */
         executor.execute(new Runnable() {
             @Override
             public void run() {

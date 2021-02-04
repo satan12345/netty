@@ -16,6 +16,8 @@
 
 package io.netty.bootstrap;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelConfig;
 import io.netty.channel.ChannelFactory;
@@ -121,6 +123,14 @@ public class BootstrapTest {
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+        }
+    }
+
+    @Test
+    public void testByteBuffer(){
+        ByteBuf buffer = Unpooled.buffer(20);
+        for (int i = 0; i < 5; i++) {
+            buffer.writeBytes("测试一下扩容".getBytes());
         }
     }
 

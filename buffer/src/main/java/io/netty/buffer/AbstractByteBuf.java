@@ -284,9 +284,12 @@ public abstract class AbstractByteBuf extends ByteBuf {
     }
 
     final void ensureWritable0(int minWritableBytes) {
+        //已经写入的数据的索引
         final int writerIndex = writerIndex();
+        //计算写入后的容量
         final int targetCapacity = writerIndex + minWritableBytes;
-        // using non-short-circuit & to reduce branching - this is a hot path and targetCapacity should rarely overflow
+        // using non-short-circuit & to reduce branching - this is a hot path and targetCapacity should rarelzy overflow
+        //判断需要达到的容量与当前字节数组的容量对比 判断是否需要进行扩容
         if (targetCapacity >= 0 & targetCapacity <= capacity()) {
             ensureAccessible();
             return;
@@ -299,6 +302,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
         }
 
         // Normalize the target capacity to the power of 2.
+        //当前还可以写入的最大字节数
         final int fastWritable = maxFastWritableBytes();
         int newCapacity = fastWritable >= minWritableBytes ? writerIndex + fastWritable
                 : alloc().calculateNewCapacity(targetCapacity, maxCapacity);
@@ -1072,6 +1076,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     @Override
     public ByteBuf writeBytes(byte[] src, int srcIndex, int length) {
+        //判断bytebuf中的剩余容量是否可以写入
         ensureWritable(length);
         setBytes(writerIndex, src, srcIndex, length);
         writerIndex += length;
@@ -1080,6 +1085,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     @Override
     public ByteBuf writeBytes(byte[] src) {
+        //写入数据
         writeBytes(src, 0, src.length);
         return this;
     }

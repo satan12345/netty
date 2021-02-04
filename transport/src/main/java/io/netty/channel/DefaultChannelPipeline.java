@@ -89,6 +89,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      */
     private boolean registered;
 
+    /**
+     * 为管道创建channelPipelline链表
+     * @param channel
+     */
     protected DefaultChannelPipeline(Channel channel) {
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
         succeededFuture = new SucceededChannelFuture(channel, null);
@@ -649,6 +653,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     final void invokeHandlerAddedIfNeeded() {
+
         assert channel.eventLoop().inEventLoop();
         if (firstRegistration) {
             firstRegistration = false;

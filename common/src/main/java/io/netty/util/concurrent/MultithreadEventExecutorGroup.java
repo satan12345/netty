@@ -86,7 +86,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             //创建线程任务执行器
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
-        //创建一个线程池组 NioEventLoop
+        //创建一NioEventLoop数组
         children = new EventExecutor[nThreads];
 
         for (int i = 0; i < nThreads; i ++) {
